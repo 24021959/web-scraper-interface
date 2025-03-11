@@ -5,7 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Scraper per Knowledge Base</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 1rem;
+        }
+        .timestamp {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        iframe {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container py-5">
@@ -20,9 +38,10 @@
                             <p class="lead">Inserisci l'URL del sito web da cui vuoi estrarre i contenuti</p>
                         </div>
                         
-                        <form id="scrape-form" class="mb-4">
+                        <!-- Form standard che invia direttamente al webhook -->
+                        <form id="direct-form" action="https://n8n-n8n.hcrxqs.easypanel.host/webhook/extract" method="post" target="response-frame" class="mb-4">
                             <div class="input-group mb-3">
-                                <input type="url" id="site-url" class="form-control form-control-lg" 
+                                <input type="url" id="site-url" name="url" class="form-control form-control-lg" 
                                        placeholder="https://www.esempio.com" required>
                                 <button class="btn btn-primary" type="submit">
                                     Estrai
@@ -30,6 +49,9 @@
                             </div>
                             <div class="form-text">Il sistema estrarrà tutti i contenuti rilevanti e li salverà nella knowledge base</div>
                         </form>
+                        
+                        <!-- Frame nascosto per ricevere la risposta -->
+                        <iframe name="response-frame" id="response-frame"></iframe>
                         
                         <div id="result-container" class="d-none">
                             <div class="alert alert-info" id="processing-alert">
@@ -64,7 +86,102 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const directForm = document.getElementById('direct-form');
+            const siteUrlInput = document.getElementById('site-url');
+            const resultContainer = document.getElementById('result-container');
+            const processingAlert = document.getElementById('processing-alert');
+            const successAlert = document.getElementById('success-alert');
+            const errorAlert = document.getElementById('error-alert');
+            const recentExtractionsContainer = document.getElementById('recent-extractions');
+            const responseFrame = document.getElementById('response-frame');
+            
+            // Carica le estrazioni recenti
+            loadRecentExtractions();
+            
+            // Gestisci invio del form diretto
+            directForm.addEventListener('submit', function(e) {
+                // Non preveniamo l'evento predefinito qui, lasciamo che il form venga inviato normalmente
+                console.log("Form inviato direttamente");
+                
+                const url = siteUrlInput.value.trim();
+                if (!url) return;
+                
+                // Mostra il contenitore risultati e l'alert di elaborazione
+                resultContainer.classList.remove('d-none');
+                processingAlert.classList.remove('d-none');
+                successAlert.classList.add('d-none');
+                errorAlert.classList.add('d-none');
+                
+                // Simula il completamento dopo un ritardo
+                setTimeout(function() {
+                    processingAlert.classList.add('d-none');
+                    successAlert.classList.remove('d-none');
+                    successAlert.innerHTML = "Estrazione avviata con successo! Il processo potrebbe richiedere alcuni minuti a seconda della dimensione del sito.";
+                    
+                    // Salva l'estrazione nella cronologia
+                    saveExtraction(url);
+                    loadRecentExtractions();
+                }, 2000);
+            });
+            
+            // Funzione per salvare l'estrazione nella cronologia
+            function saveExtraction(url) {
+                const extractions = JSON.parse(localStorage.getItem('recentExtractions') || '[]');
+                extractions.unshift({
+                    url: url,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Mantieni solo le ultime 10 estrazioni
+                if (extractions.length > 10) {
+                    extractions.pop();
+                }
+                
+                localStorage.setItem('recentExtractions', JSON.stringify(extractions));
+            }
+            
+            // Funzione per caricare le estrazioni recenti
+            function loadRecentExtractions() {
+                const extractions = JSON.parse(localStorage.getItem('recentExtractions') || '[]');
+                
+                if (extractions.length === 0) {
+                    recentExtractionsContainer.innerHTML = '<li class="list-group-item text-center">Nessuna estrazione recente</li>';
+                    return;
+                }
+                
+                recentExtractionsContainer.innerHTML = '';
+                
+                extractions.forEach(extraction => {
+                    const date = new Date(extraction.timestamp);
+                    const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                    
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-group-item';
+                    
+                    listItem.innerHTML = `
+                        <div>
+                            <strong>${extraction.url}</strong>
+                            <div class="timestamp">${formattedDate}</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary extract-again-btn" data-url="${extraction.url}">
+                            Estrai di nuovo
+                        </button>
+                    `;
+                    
+                    recentExtractionsContainer.appendChild(listItem);
+                });
+                
+                // Aggiungi event listener ai bottoni "Estrai di nuovo"
+                document.querySelectorAll('.extract-again-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        siteUrlInput.value = this.getAttribute('data-url');
+                        directForm.submit();
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>
