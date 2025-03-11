@@ -16,12 +16,20 @@
         .card-header {
             padding: 1rem;
         }
+        #recent-extractions .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .timestamp {
             font-size: 0.8rem;
             color: #6c757d;
         }
         iframe {
             display: none;
+            width: 0;
+            height: 0;
+            border: 0;
         }
     </style>
 </head>
@@ -38,8 +46,8 @@
                             <p class="lead">Inserisci l'URL del sito web da cui vuoi estrarre i contenuti</p>
                         </div>
                         
-                        <!-- Form standard che invia direttamente al webhook -->
-                        <form id="direct-form" action="https://n8n-n8n.hcrxqs.easypanel.host/webhook/extract" method="post" target="response-frame" class="mb-4">
+                        <!-- Form HTML tradizionale con target su iframe nascosto -->
+                        <form id="scraper-form" action="https://n8n-n8n.hcrxqs.easypanel.host/webhook/extract" method="POST" target="response-frame">
                             <div class="input-group mb-3">
                                 <input type="url" id="site-url" name="url" class="form-control form-control-lg" 
                                        placeholder="https://www.esempio.com" required>
@@ -50,24 +58,11 @@
                             <div class="form-text">Il sistema estrarrà tutti i contenuti rilevanti e li salverà nella knowledge base</div>
                         </form>
                         
-                        <!-- Frame nascosto per ricevere la risposta -->
+                        <!-- iframe nascosto per ricevere la risposta -->
                         <iframe name="response-frame" id="response-frame"></iframe>
                         
-                        <div id="result-container" class="d-none">
-                            <div class="alert alert-info" id="processing-alert">
-                                <div class="d-flex align-items-center">
-                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                    <div>Elaborazione in corso...</div>
-                                </div>
-                            </div>
-                            
-                            <div class="alert alert-success d-none" id="success-alert">
-                                Estrazione completata con successo!
-                            </div>
-                            
-                            <div class="alert alert-danger d-none" id="error-alert">
-                                Si è verificato un errore durante l'estrazione.
-                            </div>
+                        <div id="result-message" class="alert alert-success mt-3 d-none">
+                            Estrazione avviata con successo! Il processo potrebbe richiedere alcuni minuti a seconda della dimensione del sito.
                         </div>
                     </div>
                 </div>
@@ -88,42 +83,29 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const directForm = document.getElementById('direct-form');
+            const scraperForm = document.getElementById('scraper-form');
             const siteUrlInput = document.getElementById('site-url');
-            const resultContainer = document.getElementById('result-container');
-            const processingAlert = document.getElementById('processing-alert');
-            const successAlert = document.getElementById('success-alert');
-            const errorAlert = document.getElementById('error-alert');
+            const resultMessage = document.getElementById('result-message');
             const recentExtractionsContainer = document.getElementById('recent-extractions');
-            const responseFrame = document.getElementById('response-frame');
             
             // Carica le estrazioni recenti
             loadRecentExtractions();
             
-            // Gestisci invio del form diretto
-            directForm.addEventListener('submit', function(e) {
-                // Non preveniamo l'evento predefinito qui, lasciamo che il form venga inviato normalmente
-                console.log("Form inviato direttamente");
-                
+            // Gestisci invio del form
+            scraperForm.addEventListener('submit', function(e) {
+                // Ottieni l'URL
                 const url = siteUrlInput.value.trim();
                 if (!url) return;
                 
-                // Mostra il contenitore risultati e l'alert di elaborazione
-                resultContainer.classList.remove('d-none');
-                processingAlert.classList.remove('d-none');
-                successAlert.classList.add('d-none');
-                errorAlert.classList.add('d-none');
+                // Salva l'estrazione nella cronologia
+                saveExtraction(url);
                 
-                // Simula il completamento dopo un ritardo
+                // Mostra messaggio di successo
                 setTimeout(function() {
-                    processingAlert.classList.add('d-none');
-                    successAlert.classList.remove('d-none');
-                    successAlert.innerHTML = "Estrazione avviata con successo! Il processo potrebbe richiedere alcuni minuti a seconda della dimensione del sito.";
-                    
-                    // Salva l'estrazione nella cronologia
-                    saveExtraction(url);
+                    resultMessage.classList.remove('d-none');
+                    siteUrlInput.value = '';
                     loadRecentExtractions();
-                }, 2000);
+                }, 500);
             });
             
             // Funzione per salvare l'estrazione nella cronologia
@@ -177,11 +159,17 @@
                 document.querySelectorAll('.extract-again-btn').forEach(button => {
                     button.addEventListener('click', function() {
                         siteUrlInput.value = this.getAttribute('data-url');
-                        directForm.submit();
+                        scraperForm.submit();
+                        
+                        // Mostra messaggio di successo
+                        setTimeout(function() {
+                            resultMessage.classList.remove('d-none');
+                        }, 500);
                     });
                 });
             }
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
