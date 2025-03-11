@@ -24,12 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
         errorAlert.classList.add('d-none');
         
         try {
-            // Sostituisci con l'URL del tuo webhook n8n
-            const webhookUrl = 'https://your-n8n-instance.com/webhook/knowledge-extraction';
+            // URL del webhook n8n in produzione
+            const webhookUrl = 'https://n8n-n8n.hcrxqs.easypanel.host/webhook/extract';
             
-            // Per motivi di demo, simuliamo la chiamata API
-            // In produzione, decommenta il codice seguente
-            /*
             const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: {
@@ -41,14 +38,23 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) {
                 throw new Error('Errore nella risposta del server');
             }
-            */
             
-            // Simulazione risposta (rimuovi in produzione)
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            let responseText = "Estrazione completata con successo!";
+            
+            try {
+                const responseData = await response.json();
+                if (responseData.message) {
+                    responseText = responseData.message;
+                }
+            } catch (jsonError) {
+                // Se la risposta non è JSON, usa il testo predefinito
+                console.log("La risposta non è in formato JSON", jsonError);
+            }
             
             // Nascondi l'alert di elaborazione e mostra quello di successo
             processingAlert.classList.add('d-none');
             successAlert.classList.remove('d-none');
+            successAlert.innerHTML = responseText;
             
             // Salva l'estrazione nella cronologia
             saveExtraction(url);
