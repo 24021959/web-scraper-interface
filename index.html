@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Scraper per Knowledge Base</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h2 class="mb-0">Web Scraper Knowledge Base</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <p class="lead">Inserisci l'URL del sito web da cui vuoi estrarre i contenuti</p>
+                        </div>
+                        
+                        <form id="scrape-form" class="mb-4">
+                            <div class="input-group mb-3">
+                                <input type="url" id="site-url" class="form-control form-control-lg" 
+                                       placeholder="https://www.esempio.com" required>
+                                <button class="btn btn-primary" type="submit">
+                                    Estrai
+                                </button>
+                            </div>
+                            <div class="form-text">Il sistema estrarrà tutti i contenuti rilevanti e li salverà nella knowledge base</div>
+                        </form>
+                        
+                        <div id="result-container" class="d-none">
+                            <div class="alert alert-info" id="processing-alert">
+                                <div class="d-flex align-items-center">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                    <div>Elaborazione in corso...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-success d-none" id="success-alert">
+                                Estrazione completata con successo!
+                            </div>
+                            
+                            <div class="alert alert-danger d-none" id="error-alert">
+                                Si è verificato un errore durante l'estrazione.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4 shadow">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="mb-0">Estrazioni recenti</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul id="recent-extractions" class="list-group">
+                            <!-- Le estrazioni recenti appariranno qui -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
