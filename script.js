@@ -7,15 +7,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorAlert = document.getElementById('error-alert');
     const recentExtractionsContainer = document.getElementById('recent-extractions');
     
+    console.log("Script caricato correttamente");
+    
     // Carica le estrazioni recenti
     loadRecentExtractions();
     
     // Gestisci invio del form
     scrapeForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        console.log("Form inviato");
         
         const url = siteUrlInput.value.trim();
         if (!url) return;
+        console.log("URL da processare:", url);
         
         // Mostra il contenitore risultati e l'alert di elaborazione
         resultContainer.classList.remove('d-none');
@@ -26,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             // URL del webhook n8n in produzione
             const webhookUrl = 'https://n8n-n8n.hcrxqs.easypanel.host/webhook/extract';
+            console.log("Chiamata webhook:", webhookUrl);
             
             const response = await fetch(webhookUrl, {
                 method: 'POST',
@@ -35,20 +40,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ url: url })
             });
             
+            console.log("Risposta ricevuta, status:", response.status);
+            
             if (!response.ok) {
-                throw new Error('Errore nella risposta del server');
+                throw new Error(`Errore server: ${response.status} ${response.statusText}`);
             }
             
             let responseText = "Estrazione completata con successo!";
             
             try {
                 const responseData = await response.json();
+                console.log("Risposta JSON:", responseData);
                 if (responseData.message) {
                     responseText = responseData.message;
                 }
             } catch (jsonError) {
-                // Se la risposta non è JSON, usa il testo predefinito
-                console.log("La risposta non è in formato JSON", jsonError);
+                console.log("La risposta non è in formato JSON:", jsonError);
+                // Proviamo a ottenere il testo della risposta
+                const textResponse = await response.text();
+                console.log("Risposta testuale:", textResponse);
             }
             
             // Nascondi l'alert di elaborazione e mostra quello di successo
@@ -64,11 +74,11 @@ document.addEventListener('DOMContentLoaded', function() {
             siteUrlInput.value = '';
             
         } catch (error) {
+            console.error('Errore completo:', error);
             // Nascondi l'alert di elaborazione e mostra quello di errore
             processingAlert.classList.add('d-none');
             errorAlert.classList.remove('d-none');
             errorAlert.textContent = `Errore: ${error.message}`;
-            console.error('Errore durante l\'estrazione:', error);
         }
     });
     
