@@ -30,9 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             // URL del webhook n8n in produzione
             const webhookUrl = 'https://n8n-n8n.hcrxqs.easypanel.host/webhook/extract';
-            console.log("Chiamata webhook:", webhookUrl);
+            // Utilizzo di un proxy CORS
+            const corsProxyUrl = 'https://corsproxy.io/?';
             
-            const response = await fetch(webhookUrl, {
+            console.log("Chiamata webhook tramite proxy CORS");
+            
+            const response = await fetch(corsProxyUrl + encodeURIComponent(webhookUrl), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -46,13 +49,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(`Errore server: ${response.status} ${response.statusText}`);
             }
             
-            let responseText = "Estrazione completata con successo!";
+            let responseText = "Estrazione avviata con successo! Il processo potrebbe richiedere alcuni minuti a seconda della dimensione del sito.";
             
             try {
                 const responseData = await response.json();
                 console.log("Risposta JSON:", responseData);
                 if (responseData.message) {
-                    responseText = responseData.message;
+                    responseText += "<br><br>Messaggio dal server: " + responseData.message;
                 }
             } catch (jsonError) {
                 console.log("La risposta non è in formato JSON:", jsonError);
