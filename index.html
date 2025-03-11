@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Scraper per Knowledge Base</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         body {
             background-color: #f8f9fa;
@@ -30,6 +31,10 @@
             width: 0;
             height: 0;
             border: 0;
+        }
+        .extraction-actions {
+            display: flex;
+            gap: 5px;
         }
     </style>
 </head>
@@ -68,8 +73,13 @@
                 </div>
                 
                 <div class="card mt-4 shadow">
-                    <div class="card-header bg-secondary text-white">
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">Estrazioni recenti</h4>
+                        <div>
+                            <button id="clear-all-btn" class="btn btn-sm btn-outline-light">
+                                <i class="bi bi-trash"></i> Cancella tutto
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <ul id="recent-extractions" class="list-group">
@@ -87,6 +97,10 @@
             const siteUrlInput = document.getElementById('site-url');
             const resultMessage = document.getElementById('result-message');
             const recentExtractionsContainer = document.getElementById('recent-extractions');
+            const clearAllBtn = document.getElementById('clear-all-btn');
+            
+            // Maximum number of recent extractions to keep
+            const MAX_RECENT_EXTRACTIONS = 10;
             
             // Carica le estrazioni recenti
             loadRecentExtractions();
@@ -108,6 +122,14 @@
                 }, 500);
             });
             
+            // Gestisci il pulsante "Cancella tutto"
+            clearAllBtn.addEventListener('click', function() {
+                if (confirm('Sei sicuro di voler cancellare tutte le estrazioni recenti?')) {
+                    localStorage.removeItem('recentExtractions');
+                    loadRecentExtractions();
+                }
+            });
+            
             // Funzione per salvare l'estrazione nella cronologia
             function saveExtraction(url) {
                 const extractions = JSON.parse(localStorage.getItem('recentExtractions') || '[]');
@@ -116,9 +138,9 @@
                     timestamp: new Date().toISOString()
                 });
                 
-                // Mantieni solo le ultime 10 estrazioni
-                if (extractions.length > 10) {
-                    extractions.pop();
+                // Mantieni solo le ultime MAX_RECENT_EXTRACTIONS estrazioni
+                if (extractions.length > MAX_RECENT_EXTRACTIONS) {
+                    extractions.splice(MAX_RECENT_EXTRACTIONS);
                 }
                 
                 localStorage.setItem('recentExtractions', JSON.stringify(extractions));
@@ -135,7 +157,7 @@
                 
                 recentExtractionsContainer.innerHTML = '';
                 
-                extractions.forEach(extraction => {
+                extractions.forEach((extraction, index) => {
                     const date = new Date(extraction.timestamp);
                     const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
                     
@@ -147,9 +169,14 @@
                             <strong>${extraction.url}</strong>
                             <div class="timestamp">${formattedDate}</div>
                         </div>
-                        <button class="btn btn-sm btn-outline-primary extract-again-btn" data-url="${extraction.url}">
-                            Estrai di nuovo
-                        </button>
+                        <div class="extraction-actions">
+                            <button class="btn btn-sm btn-outline-primary extract-again-btn" data-url="${extraction.url}">
+                                <i class="bi bi-arrow-repeat"></i> Estrai
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-index="${index}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     `;
                     
                     recentExtractionsContainer.appendChild(listItem);
@@ -167,6 +194,22 @@
                         }, 500);
                     });
                 });
+                
+                // Aggiungi event listener ai bottoni "Cancella"
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        deleteExtraction(index);
+                    });
+                });
+            }
+            
+            // Funzione per cancellare una singola estrazione
+            function deleteExtraction(index) {
+                const extractions = JSON.parse(localStorage.getItem('recentExtractions') || '[]');
+                extractions.splice(index, 1);
+                localStorage.setItem('recentExtractions', JSON.stringify(extractions));
+                loadRecentExtractions();
             }
         });
     </script>
