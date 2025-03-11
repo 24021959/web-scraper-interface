@@ -1,0 +1,23 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1rem;
+}
+
+#recent-extractions .list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timestamp {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
